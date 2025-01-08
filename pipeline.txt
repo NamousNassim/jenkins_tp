@@ -1,0 +1,37 @@
+pipeline {
+    agent any 
+    tools {
+        maven 'maven'
+    }
+    stages {
+        stage('Git clone') {
+            steps {
+                script {
+                    checkout([$class: 'GitSCM', branches: [[name: 'main']],
+                    userRemoteConfigs: [[url: 'https://github.com/NamousNassim/jenkins_tp']]])
+                }
+            }
+        }
+        stage('Build') {
+            steps {
+                dir('POV-JAVA') {
+                    bat 'mvn clean install'
+                }
+            }
+        }
+        stage('Create Docker Image') {
+            steps {
+                dir('POV-JAVA') {
+                    bat 'docker build -t nassim/pos .'
+                }
+            }
+        }
+        stage('Run') {
+            steps {
+                script {
+                    bat "docker run --name test-pos -d -p 8585:8282 nassim/pos"
+                }
+            }
+        }
+    }
+} 
